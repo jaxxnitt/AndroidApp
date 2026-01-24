@@ -7,9 +7,7 @@ plugins {
 
 android {
     namespace = "com.jaxxnitt.myapplication"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.jaxxnitt.myapplication"
@@ -75,6 +73,12 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit.kotlinx.serialization)
+
+    // Coil for image loading
+    implementation(libs.coil.compose)
+
+    // Lottie for animations
+    implementation(libs.lottie.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

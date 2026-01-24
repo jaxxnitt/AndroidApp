@@ -7,8 +7,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.jaxxnitt.myapplication.AreYouDeadApplication
-import com.jaxxnitt.myapplication.data.api.AlertApiService
-import com.jaxxnitt.myapplication.data.api.AlertRequest
+import com.jaxxnitt.myapplication.util.EmailHelper
 import com.jaxxnitt.myapplication.util.NotificationHelper
 import com.jaxxnitt.myapplication.util.SmsHelper
 import java.text.SimpleDateFormat
@@ -38,74 +37,41 @@ class AlertContactsWorker(
             "Never"
         }
 
-        var successCount = 0
+        var smsSuccessCount = 0
+        var emailSuccessCount = 0
 
         for (contact in contacts) {
-            // Send SMS if phone is available
+            // Send SMS if phone is available (using smart method with Twilio fallback)
             if (contact.phone.isNotBlank()) {
                 val smsMessage = buildSmsMessage(settings.userName, lastCheckInText)
-                val smsSent = SmsHelper.sendSms(applicationContext, contact.phone, smsMessage)
-                if (smsSent) successCount++
+                val smsSent = SmsHelper.sendSmsSmart(applicationContext, contact.phone, smsMessage)
+                if (smsSent) smsSuccessCount++
             }
 
-            // Send Email if email is available
+            // Send Email if email is available (using smart method with SendGrid/backend)
             if (contact.email.isNotBlank()) {
-                val emailSent = sendAlertEmail(
+                val emailSent = EmailHelper.sendAlertEmail(
                     toEmail = contact.email,
                     userName = settings.userName,
                     lastCheckInText = lastCheckInText
                 )
-                if (emailSent) successCount++
+                if (emailSent) emailSuccessCount++
             }
         }
+
+        val totalSuccess = smsSuccessCount + emailSuccessCount
 
         // Show notification that alerts were sent
         NotificationHelper.showAlertSentNotification(applicationContext, contacts.size)
 
-        Log.d(TAG, "Alerts sent to ${contacts.size} contacts, $successCount successful")
+        Log.d(TAG, "Alerts sent to ${contacts.size} contacts: $smsSuccessCount SMS, $emailSuccessCount emails successful")
 
         return Result.success()
     }
 
     private fun buildSmsMessage(userName: String, lastCheckInText: String): String {
-        return "SAFETY ALERT: $userName has not checked in on the \"Are You Dead?\" app. " +
+        return "SAFETY ALERT: $userName has not checked in on the \"Are You Alive?\" app. " +
                 "Last check-in: $lastCheckInText. Please try to contact them."
-    }
-
-    private suspend fun sendAlertEmail(
-        toEmail: String,
-        userName: String,
-        lastCheckInText: String
-    ): Boolean {
-        return try {
-            val apiService = AlertApiService.create()
-            val request = AlertRequest(
-                to = toEmail,
-                subject = "Safety Alert: $userName Missed Check-In",
-                body = buildEmailBody(userName, lastCheckInText),
-                userName = userName
-            )
-            val response = apiService.sendAlertEmail(request)
-            response.isSuccessful
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to send email to $toEmail", e)
-            false
-        }
-    }
-
-    private fun buildEmailBody(userName: String, lastCheckInText: String): String {
-        return """
-            SAFETY ALERT
-
-            $userName has not checked in on the "Are You Dead?" safety check-in app.
-
-            Last check-in: $lastCheckInText
-
-            This could indicate that they may need assistance. Please try to contact them to ensure they are safe.
-
-            ---
-            This is an automated message from the "Are You Dead?" safety check-in app.
-        """.trimIndent()
     }
 
     companion object {

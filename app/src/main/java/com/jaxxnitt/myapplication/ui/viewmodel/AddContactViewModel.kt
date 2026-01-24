@@ -56,6 +56,15 @@ class AddContactViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.value = _uiState.value.copy(email = email, errorMessage = null)
     }
 
+    fun setContactFromPicker(name: String, phone: String, email: String) {
+        _uiState.value = _uiState.value.copy(
+            name = name,
+            phone = phone,
+            email = email,
+            errorMessage = null
+        )
+    }
+
     fun saveContact() {
         val state = _uiState.value
 
