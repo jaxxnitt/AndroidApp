@@ -1,11 +1,7 @@
 package com.jaxxnitt.myapplication.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,40 +12,104 @@ import com.jaxxnitt.myapplication.ui.screens.AddContactScreen
 import com.jaxxnitt.myapplication.ui.screens.ContactsScreen
 import com.jaxxnitt.myapplication.ui.screens.FirstTimeSetupScreen
 import com.jaxxnitt.myapplication.ui.screens.HomeScreen
+import com.jaxxnitt.myapplication.ui.screens.LoginScreen
+import com.jaxxnitt.myapplication.ui.screens.OtpVerificationScreen
+import com.jaxxnitt.myapplication.ui.screens.PhoneLoginScreen
 import com.jaxxnitt.myapplication.ui.screens.ProfileScreen
 import com.jaxxnitt.myapplication.ui.screens.SettingsScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import java.net.URLDecoder
 
 @Composable
 fun NavGraph(navController: NavHostController) {
     val context = LocalContext.current
     val app = context.applicationContext as AreYouDeadApplication
 
-    // Check if it's the first time
-    val isFirstTime = runBlocking {
-        app.settingsDataStore.settingsFlow.first().isFirstTime
+    // Check app state for navigation
+    val settings = runBlocking {
+        app.settingsDataStore.settingsFlow.first()
     }
+    val isFirstTime = settings.isFirstTime
+    val isLoggedIn = app.authRepository.isLoggedIn
 
-    val startDestination = if (isFirstTime) {
-        Screen.FirstTimeSetup.route
-    } else {
-        Screen.Home.route
+    // Determine start destination based on auth state
+    val startDestination = when {
+        isFirstTime -> Screen.FirstTimeSetup.route
+        !isLoggedIn -> Screen.Login.route
+        else -> Screen.Home.route
     }
 
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        // Auth screens
+        composable(Screen.Login.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                },
+                onPhoneLogin = {
+                    navController.navigate(Screen.PhoneLogin.route)
+                },
+                onSkipLogin = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.PhoneLogin.route) {
+            PhoneLoginScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onCodeSent = { verificationId, phoneNumber ->
+                    navController.navigate(
+                        Screen.OtpVerification.createRoute(verificationId, phoneNumber)
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = Screen.OtpVerification.route,
+            arguments = listOf(
+                navArgument("verificationId") { type = NavType.StringType },
+                navArgument("phoneNumber") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val verificationId = backStackEntry.arguments?.getString("verificationId") ?: ""
+            val phoneNumber = URLDecoder.decode(
+                backStackEntry.arguments?.getString("phoneNumber") ?: "",
+                "UTF-8"
+            )
+            OtpVerificationScreen(
+                verificationId = verificationId,
+                phoneNumber = phoneNumber,
+                onNavigateBack = { navController.popBackStack() },
+                onVerificationSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // First time setup - now goes to Login after completion
         composable(Screen.FirstTimeSetup.route) {
             FirstTimeSetupScreen(
                 onSetupComplete = {
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.FirstTimeSetup.route) { inclusive = true }
                     }
                 }
             )
         }
+
+        // Main app screens
         composable(Screen.Home.route) {
             HomeScreen(
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },

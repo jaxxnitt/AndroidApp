@@ -4,10 +4,13 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.jaxxnitt.myapplication.data.auth.AuthRepository
 import com.jaxxnitt.myapplication.data.database.AppDatabase
 import com.jaxxnitt.myapplication.data.preferences.SettingsDataStore
 import com.jaxxnitt.myapplication.data.repository.CheckInRepository
 import com.jaxxnitt.myapplication.data.repository.ContactRepository
+import com.jaxxnitt.myapplication.data.repository.FirestoreRepository
+import com.jaxxnitt.myapplication.data.sync.SyncManager
 
 class AreYouDeadApplication : Application() {
 
@@ -15,6 +18,19 @@ class AreYouDeadApplication : Application() {
     val contactRepository by lazy { ContactRepository(database.contactDao()) }
     val checkInRepository by lazy { CheckInRepository(database.checkInDao()) }
     val settingsDataStore by lazy { SettingsDataStore(this) }
+
+    // Auth and sync repositories
+    val authRepository by lazy { AuthRepository() }
+    val firestoreRepository by lazy { FirestoreRepository() }
+    val syncManager by lazy {
+        SyncManager(
+            context = this,
+            firestoreRepository = firestoreRepository,
+            contactRepository = contactRepository,
+            checkInRepository = checkInRepository,
+            settingsDataStore = settingsDataStore
+        )
+    }
 
     override fun onCreate() {
         super.onCreate()

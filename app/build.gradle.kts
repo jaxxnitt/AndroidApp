@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -79,6 +80,17 @@ dependencies {
 
     // Lottie for animations
     implementation(libs.lottie.compose)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore.ktx)
+
+    // Google Sign-In with Credential Manager
+    implementation(libs.play.services.auth)
+    implementation(libs.credential.manager)
+    implementation(libs.credential.manager.play.services)
+    implementation(libs.googleid)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

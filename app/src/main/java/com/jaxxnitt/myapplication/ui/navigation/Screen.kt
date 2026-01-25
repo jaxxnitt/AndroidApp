@@ -10,4 +10,14 @@ sealed class Screen(val route: String) {
         fun createRoute(contactId: Long) = "edit_contact/$contactId"
     }
     data object Settings : Screen("settings")
+
+    // Auth screens
+    data object Login : Screen("login")
+    data object PhoneLogin : Screen("phone_login")
+    data object OtpVerification : Screen("otp_verification/{verificationId}/{phoneNumber}") {
+        fun createRoute(verificationId: String, phoneNumber: String): String {
+            val encodedPhone = java.net.URLEncoder.encode(phoneNumber, "UTF-8")
+            return "otp_verification/$verificationId/$encodedPhone"
+        }
+    }
 }

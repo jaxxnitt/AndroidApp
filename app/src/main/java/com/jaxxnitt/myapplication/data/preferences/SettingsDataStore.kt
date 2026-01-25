@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +24,11 @@ data class AppSettings(
     val userName: String = "User",
     val fullName: String = "",
     val profilePictureUri: String = "",
-    val isFirstTime: Boolean = true
+    val isFirstTime: Boolean = true,
+    // Auth-related fields
+    val userId: String? = null,
+    val authProvider: String? = null, // "google" or "phone"
+    val lastSyncTimestamp: Long = 0
 )
 
 class SettingsDataStore(private val context: Context) {
@@ -38,6 +43,10 @@ class SettingsDataStore(private val context: Context) {
         val FULL_NAME = stringPreferencesKey("full_name")
         val PROFILE_PICTURE_URI = stringPreferencesKey("profile_picture_uri")
         val IS_FIRST_TIME = booleanPreferencesKey("is_first_time")
+        // Auth-related keys
+        val USER_ID = stringPreferencesKey("user_id")
+        val AUTH_PROVIDER = stringPreferencesKey("auth_provider")
+        val LAST_SYNC_TIMESTAMP = longPreferencesKey("last_sync_timestamp")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -50,7 +59,10 @@ class SettingsDataStore(private val context: Context) {
             userName = preferences[PreferencesKeys.USER_NAME] ?: "User",
             fullName = preferences[PreferencesKeys.FULL_NAME] ?: "",
             profilePictureUri = preferences[PreferencesKeys.PROFILE_PICTURE_URI] ?: "",
-            isFirstTime = preferences[PreferencesKeys.IS_FIRST_TIME] ?: true
+            isFirstTime = preferences[PreferencesKeys.IS_FIRST_TIME] ?: true,
+            userId = preferences[PreferencesKeys.USER_ID],
+            authProvider = preferences[PreferencesKeys.AUTH_PROVIDER],
+            lastSyncTimestamp = preferences[PreferencesKeys.LAST_SYNC_TIMESTAMP] ?: 0
         )
     }
 
@@ -119,5 +131,39 @@ class SettingsDataStore(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.IS_FIRST_TIME] = false
         }
+    }
+
+    // Auth-related methods
+    suspend fun updateAuthInfo(userId: String?, provider: String?) {
+        context.dataStore.edit { preferences ->
+            if (userId != null) {
+                preferences[PreferencesKeys.USER_ID] = userId
+            } else {
+                preferences.remove(PreferencesKeys.USER_ID)
+            }
+            if (provider != null) {
+                preferences[PreferencesKeys.AUTH_PROVIDER] = provider
+            } else {
+                preferences.remove(PreferencesKeys.AUTH_PROVIDER)
+            }
+        }
+    }
+
+    suspend fun updateLastSyncTimestamp(timestamp: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LAST_SYNC_TIMESTAMP] = timestamp
+        }
+    }
+
+    suspend fun clearAuthInfo() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(PreferencesKeys.USER_ID)
+            preferences.remove(PreferencesKeys.AUTH_PROVIDER)
+            preferences.remove(PreferencesKeys.LAST_SYNC_TIMESTAMP)
+        }
+    }
+
+    suspend fun isLoggedIn(): Boolean {
+        return settingsFlow.first().userId != null
     }
 }

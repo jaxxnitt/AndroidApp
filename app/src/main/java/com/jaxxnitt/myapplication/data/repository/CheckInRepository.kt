@@ -18,6 +18,15 @@ class CheckInRepository(private val checkInDao: CheckInDao) {
         return checkInDao.insert(CheckIn())
     }
 
+    suspend fun getRecentCheckIns(days: Int): List<CheckIn> {
+        val sinceTimestamp = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
+        return checkInDao.getRecentCheckIns(sinceTimestamp)
+    }
+
+    suspend fun update(checkIn: CheckIn) {
+        checkInDao.update(checkIn)
+    }
+
     suspend fun clearHistory() {
         checkInDao.deleteAll()
     }
