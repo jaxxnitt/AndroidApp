@@ -45,7 +45,6 @@ import com.jaxxnitt.myapplication.ui.viewmodel.AuthViewModel
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onPhoneLogin: () -> Unit,
-    onSkipLogin: () -> Unit,
     viewModel: AuthViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -120,13 +119,6 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Continue with Phone")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Skip button for offline use
-            TextButton(onClick = onSkipLogin) {
-                Text("Skip for now")
             }
 
             // Error message

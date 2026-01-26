@@ -18,10 +18,21 @@ data class FirstTimeSetupUiState(
 
 class FirstTimeSetupViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val settingsDataStore = (application as AreYouDeadApplication).settingsDataStore
+    private val app = application as AreYouDeadApplication
+    private val settingsDataStore = app.settingsDataStore
+    private val authRepository = app.authRepository
 
     private val _uiState = MutableStateFlow(FirstTimeSetupUiState())
     val uiState: StateFlow<FirstTimeSetupUiState> = _uiState.asStateFlow()
+
+    init {
+        // Prefill with Google account name if available
+        authRepository.currentUser?.displayName?.let { googleName ->
+            if (googleName.isNotBlank()) {
+                _uiState.value = _uiState.value.copy(fullName = googleName)
+            }
+        }
+    }
 
     fun updateFullName(name: String) {
         _uiState.value = _uiState.value.copy(fullName = name, errorMessage = null)

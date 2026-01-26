@@ -16,7 +16,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -40,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jaxxnitt.myapplication.ui.components.TimePickerDialog
+import com.jaxxnitt.myapplication.ui.viewmodel.AuthViewModel
 import com.jaxxnitt.myapplication.ui.viewmodel.SettingsViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -49,7 +53,9 @@ import java.util.Locale
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: SettingsViewModel = viewModel()
+    onSignOut: () -> Unit,
+    viewModel: SettingsViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
     var showTimePicker by remember { mutableStateOf(false) }
@@ -310,6 +316,27 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Sign Out Button
+            Button(
+                onClick = {
+                    authViewModel.signOut()
+                    onSignOut()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Icon(
+                    Icons.Default.Logout,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Sign Out")
             }
         }
 

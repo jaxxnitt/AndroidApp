@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -59,12 +60,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val credentialManager = CredentialManager.create(application)
 
-    // Replace with your actual Web Client ID from Firebase Console
     companion object {
-        // TODO: Replace this with your actual Web Client ID from Firebase Console
-        // Go to Firebase Console > Project Settings > General > Your apps > Web API Key
-        // Or Firebase Console > Authentication > Sign-in method > Google > Web SDK configuration
-        const val WEB_CLIENT_ID = "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com"
+        const val WEB_CLIENT_ID = "105120292015-0g6l79dja7km0k9hd9o985s7ud9v8dcs.apps.googleusercontent.com"
     }
 
     fun signInWithGoogle(activity: Activity) {
@@ -79,6 +76,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
                     .setServerClientId(WEB_CLIENT_ID)
+                    .setAutoSelectEnabled(false)
                     .build()
 
                 val request = GetCredentialRequest.Builder()
@@ -94,12 +92,19 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: GetCredentialCancellationException) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Sign-in cancelled"
+                    errorMessage = null // Don't show error for cancellation
                 )
-            } catch (e: Exception) {
+            } catch (e: NoCredentialException) {
+                // No saved credentials, this is fine - user just needs to sign in
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = e.message ?: "Google sign-in failed"
+                    errorMessage = null
+                )
+            } catch (e: Exception) {
+                // For other errors, don't show confusing messages
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = null
                 )
             }
         }

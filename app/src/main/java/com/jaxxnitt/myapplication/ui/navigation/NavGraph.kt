@@ -34,9 +34,10 @@ fun NavGraph(navController: NavHostController) {
     val isLoggedIn = app.authRepository.isLoggedIn
 
     // Determine start destination based on auth state
+    // Login first, then name setup if first time
     val startDestination = when {
-        isFirstTime -> Screen.FirstTimeSetup.route
         !isLoggedIn -> Screen.Login.route
+        isFirstTime -> Screen.FirstTimeSetup.route
         else -> Screen.Home.route
     }
 
@@ -46,19 +47,23 @@ fun NavGraph(navController: NavHostController) {
     ) {
         // Auth screens
         composable(Screen.Login.route) {
+            val currentSettings = runBlocking {
+                app.settingsDataStore.settingsFlow.first()
+            }
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                    if (currentSettings.isFirstTime) {
+                        navController.navigate(Screen.FirstTimeSetup.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
                     }
                 },
                 onPhoneLogin = {
                     navController.navigate(Screen.PhoneLogin.route)
-                },
-                onSkipLogin = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
                 }
             )
         }
@@ -86,23 +91,32 @@ fun NavGraph(navController: NavHostController) {
                 backStackEntry.arguments?.getString("phoneNumber") ?: "",
                 "UTF-8"
             )
+            val currentSettings = runBlocking {
+                app.settingsDataStore.settingsFlow.first()
+            }
             OtpVerificationScreen(
                 verificationId = verificationId,
                 phoneNumber = phoneNumber,
                 onNavigateBack = { navController.popBackStack() },
                 onVerificationSuccess = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                    if (currentSettings.isFirstTime) {
+                        navController.navigate(Screen.FirstTimeSetup.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
                     }
                 }
             )
         }
 
-        // First time setup - now goes to Login after completion
+        // First time setup - goes to Home after completion
         composable(Screen.FirstTimeSetup.route) {
             FirstTimeSetupScreen(
                 onSetupComplete = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.FirstTimeSetup.route) { inclusive = true }
                     }
                 }
@@ -156,7 +170,12 @@ fun NavGraph(navController: NavHostController) {
 
         composable(Screen.Settings.route) {
             SettingsScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onSignOut = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }

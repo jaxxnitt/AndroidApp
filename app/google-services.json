@@ -1,31 +1,44 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "placeholder-project",
-    "storage_bucket": "placeholder-project.appspot.com"
+    "project_number": "105120292015",
+    "project_id": "areyoualive-c8991",
+    "storage_bucket": "areyoualive-c8991.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "mobilesdk_app_id": "1:105120292015:android:3acd97741cccafce3f485a",
         "android_client_info": {
           "package_name": "com.jaxxnitt.myapplication"
         }
       },
       "oauth_client": [
         {
-          "client_id": "000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+          "client_id": "105120292015-rmjho6sumdj66v4u71isdl5e7eh14uko.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jaxxnitt.myapplication",
+            "certificate_hash": "d19c9853cad03fe1483f277419a0edc9ac88151b"
+          }
+        },
+        {
+          "client_id": "105120292015-0g6l79dja7km0k9hd9o985s7ud9v8dcs.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+          "current_key": "AIzaSyBmMUhqkR0QqnA5PB9qpBHmvNatUTrSz_4"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "105120292015-0g6l79dja7km0k9hd9o985s7ud9v8dcs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
