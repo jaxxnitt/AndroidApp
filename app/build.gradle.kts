@@ -6,6 +6,15 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
 android {
     namespace = "com.jaxxnitt.myapplication"
     compileSdk = 36
@@ -18,6 +27,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Twilio credentials from local.properties
+        buildConfigField("String", "TWILIO_ACCOUNT_SID", "\"${localProperties.getProperty("TWILIO_ACCOUNT_SID", "")}\"")
+        buildConfigField("String", "TWILIO_AUTH_TOKEN", "\"${localProperties.getProperty("TWILIO_AUTH_TOKEN", "")}\"")
+        buildConfigField("String", "TWILIO_FROM_PHONE_NUMBER", "\"${localProperties.getProperty("TWILIO_FROM_PHONE_NUMBER", "")}\"")
+        buildConfigField("String", "TWILIO_WHATSAPP_FROM_NUMBER", "\"${localProperties.getProperty("TWILIO_WHATSAPP_FROM_NUMBER", "")}\"")
     }
 
     buildTypes {
@@ -38,6 +53,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

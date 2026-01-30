@@ -10,6 +10,7 @@ import com.jaxxnitt.myapplication.AreYouDeadApplication
 import com.jaxxnitt.myapplication.util.EmailHelper
 import com.jaxxnitt.myapplication.util.NotificationHelper
 import com.jaxxnitt.myapplication.util.SmsHelper
+import com.jaxxnitt.myapplication.util.WhatsAppHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -38,13 +39,21 @@ class AlertContactsWorker(
         }
 
         var smsSuccessCount = 0
+        var whatsAppSuccessCount = 0
         var emailSuccessCount = 0
 
         for (contact in contacts) {
+            val alertMessage = buildSmsMessage(settings.userName, lastCheckInText)
+
+            // Send WhatsApp if phone is available and Twilio WhatsApp is configured
+            if (contact.phone.isNotBlank() && WhatsAppHelper.isWhatsAppAvailable()) {
+                val whatsAppSent = WhatsAppHelper.sendWhatsApp(contact.phone, alertMessage)
+                if (whatsAppSent) whatsAppSuccessCount++
+            }
+
             // Send SMS if phone is available (using smart method with Twilio fallback)
             if (contact.phone.isNotBlank()) {
-                val smsMessage = buildSmsMessage(settings.userName, lastCheckInText)
-                val smsSent = SmsHelper.sendSmsSmart(applicationContext, contact.phone, smsMessage)
+                val smsSent = SmsHelper.sendSmsSmart(applicationContext, contact.phone, alertMessage)
                 if (smsSent) smsSuccessCount++
             }
 
@@ -59,12 +68,12 @@ class AlertContactsWorker(
             }
         }
 
-        val totalSuccess = smsSuccessCount + emailSuccessCount
+        val totalSuccess = smsSuccessCount + whatsAppSuccessCount + emailSuccessCount
 
         // Show notification that alerts were sent
         NotificationHelper.showAlertSentNotification(applicationContext, contacts.size)
 
-        Log.d(TAG, "Alerts sent to ${contacts.size} contacts: $smsSuccessCount SMS, $emailSuccessCount emails successful")
+        Log.d(TAG, "Alerts sent to ${contacts.size} contacts: $smsSuccessCount SMS, $whatsAppSuccessCount WhatsApp, $emailSuccessCount emails successful")
 
         return Result.success()
     }

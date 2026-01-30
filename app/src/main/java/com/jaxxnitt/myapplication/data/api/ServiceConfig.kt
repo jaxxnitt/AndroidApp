@@ -104,13 +104,19 @@ object ServiceConfig {
      * Check if the app has any notification service configured
      */
     val hasAnyServiceConfigured: Boolean
-        get() = hasSmsServiceConfigured || hasEmailServiceConfigured
+        get() = hasSmsServiceConfigured || hasWhatsAppServiceConfigured || hasEmailServiceConfigured
 
     /**
      * Check if SMS is configured (either native permission or Twilio)
      */
     val hasSmsServiceConfigured: Boolean
         get() = TwilioConfig.isConfigured // Native SMS doesn't require pre-configuration
+
+    /**
+     * Check if WhatsApp is configured (via Twilio)
+     */
+    val hasWhatsAppServiceConfigured: Boolean
+        get() = TwilioConfig.isWhatsAppConfigured
 
     /**
      * Check if Email is configured (either SendGrid or backend)
@@ -127,12 +133,17 @@ object ServiceConfig {
             else -> "Native SMS (requires permission)"
         }
 
+        val whatsApp = when {
+            TwilioConfig.isWhatsAppConfigured -> "Twilio WhatsApp"
+            else -> "Not configured"
+        }
+
         val email = when {
             SendGridConfig.isConfigured -> "SendGrid"
             BackendConfig.isConfigured -> "Custom Backend"
             else -> "Not configured"
         }
 
-        return "SMS: $sms | Email: $email"
+        return "SMS: $sms | WhatsApp: $whatsApp | Email: $email"
     }
 }
