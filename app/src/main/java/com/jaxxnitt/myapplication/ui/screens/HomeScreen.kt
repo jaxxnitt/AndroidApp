@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
@@ -88,6 +89,7 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToContacts: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToLifeTips: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -184,10 +186,45 @@ fun HomeScreen(
                     }
                 )
 
-                if (!uiState.settings.isEnabled) {
-                    DisabledWarningCard()
-                } else {
-                    FrequencyInfo(frequencyDays = uiState.settings.checkInFrequencyDays)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (!uiState.settings.isEnabled) {
+                        DisabledWarningCard()
+                    } else {
+                        FrequencyInfo(frequencyDays = uiState.settings.checkInFrequencyDays)
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Card(
+                        onClick = onNavigateToLifeTips,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FavoriteBorder,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Tips to Stay Alive Longer",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
                 }
             }
         }

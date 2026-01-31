@@ -12,6 +12,7 @@ import com.jaxxnitt.myapplication.ui.screens.AddContactScreen
 import com.jaxxnitt.myapplication.ui.screens.ContactsScreen
 import com.jaxxnitt.myapplication.ui.screens.FirstTimeSetupScreen
 import com.jaxxnitt.myapplication.ui.screens.HomeScreen
+import com.jaxxnitt.myapplication.ui.screens.LifeTipsScreen
 import com.jaxxnitt.myapplication.ui.screens.LoginScreen
 import com.jaxxnitt.myapplication.ui.screens.OtpVerificationScreen
 import com.jaxxnitt.myapplication.ui.screens.PhoneLoginScreen
@@ -128,7 +129,14 @@ fun NavGraph(navController: NavHostController) {
             HomeScreen(
                 onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                 onNavigateToContacts = { navController.navigate(Screen.Contacts.route) },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onNavigateToLifeTips = { navController.navigate(Screen.LifeTips.route) }
+            )
+        }
+
+        composable(Screen.LifeTips.route) {
+            LifeTipsScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

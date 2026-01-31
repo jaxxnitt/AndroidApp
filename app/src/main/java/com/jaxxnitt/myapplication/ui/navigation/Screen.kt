@@ -10,6 +10,7 @@ sealed class Screen(val route: String) {
         fun createRoute(contactId: Long) = "edit_contact/$contactId"
     }
     data object Settings : Screen("settings")
+    data object LifeTips : Screen("life_tips")
 
     // Auth screens
     data object Login : Screen("login")
