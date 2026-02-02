@@ -73,38 +73,62 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             )
 
             try {
-                val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
+                // First try with authorized accounts only (fast path)
+                val authorizedOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(true)
                     .setServerClientId(WEB_CLIENT_ID)
-                    .setAutoSelectEnabled(false)
+                    .setAutoSelectEnabled(true)
                     .build()
 
-                val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
+                val authorizedRequest = GetCredentialRequest.Builder()
+                    .addCredentialOption(authorizedOption)
                     .build()
 
                 val result = credentialManager.getCredential(
                     context = activity,
-                    request = request
+                    request = authorizedRequest
                 )
 
                 handleGoogleSignInResult(result.credential)
-            } catch (e: GetCredentialCancellationException) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = null // Don't show error for cancellation
-                )
             } catch (e: NoCredentialException) {
-                // No saved credentials, this is fine - user just needs to sign in
+                // No authorized accounts found, show full account picker
+                try {
+                    val googleIdOption = GetGoogleIdOption.Builder()
+                        .setFilterByAuthorizedAccounts(false)
+                        .setServerClientId(WEB_CLIENT_ID)
+                        .setAutoSelectEnabled(false)
+                        .build()
+
+                    val request = GetCredentialRequest.Builder()
+                        .addCredentialOption(googleIdOption)
+                        .build()
+
+                    val result = credentialManager.getCredential(
+                        context = activity,
+                        request = request
+                    )
+
+                    handleGoogleSignInResult(result.credential)
+                } catch (e2: GetCredentialCancellationException) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                } catch (e2: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Sign in failed. Please try again."
+                    )
+                }
+            } catch (e: GetCredentialCancellationException) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = null
                 )
             } catch (e: Exception) {
-                // For other errors, don't show confusing messages
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = null
+                    errorMessage = "Sign in failed. Please try again."
                 )
             }
         }
