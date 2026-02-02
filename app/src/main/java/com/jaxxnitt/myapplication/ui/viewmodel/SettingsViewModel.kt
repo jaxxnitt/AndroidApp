@@ -61,6 +61,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun updateMessagingMethod(method: String) {
+        viewModelScope.launch {
+            settingsDataStore.updateMessagingMethod(method)
+        }
+    }
+
     private suspend fun rescheduleWorkers() {
         val currentSettings = settingsDataStore.getSettings()
         if (currentSettings.isEnabled) {

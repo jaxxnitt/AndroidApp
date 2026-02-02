@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -61,6 +62,7 @@ fun SettingsScreen(
     var showTimePicker by remember { mutableStateOf(false) }
     var showGracePeriodDropdown by remember { mutableStateOf(false) }
     var showFrequencyDropdown by remember { mutableStateOf(false) }
+    var showMessagingMethodDropdown by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -287,6 +289,61 @@ fun SettingsScreen(
                 }
             }
 
+            // Messaging Method
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showMessagingMethodDropdown = true }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Message,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Column(modifier = Modifier.padding(start = 12.dp)) {
+                            Text(
+                                text = "Alert Method",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = "How to notify emergency contacts",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Column {
+                        Text(
+                            text = getMessagingMethodText(settings.messagingMethod),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        DropdownMenu(
+                            expanded = showMessagingMethodDropdown,
+                            onDismissRequest = { showMessagingMethodDropdown = false }
+                        ) {
+                            listOf("sms", "whatsapp", "both").forEach { method ->
+                                DropdownMenuItem(
+                                    text = { Text(getMessagingMethodText(method)) },
+                                    onClick = {
+                                        viewModel.updateMessagingMethod(method)
+                                        showMessagingMethodDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Info card
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
@@ -310,7 +367,12 @@ fun SettingsScreen(
                                 else -> "every ${settings.checkInFrequencyDays} days"
                             })
                             append(" by pressing \"I'm Alive\"\n")
-                            append("3. If you don't check in within ${settings.gracePeriodHours} hours, your emergency contacts will be notified via SMS and Email")
+                            val methodText = when (settings.messagingMethod) {
+                                "sms" -> "SMS"
+                                "whatsapp" -> "WhatsApp"
+                                else -> "SMS & WhatsApp"
+                            }
+                            append("3. If you don't check in within ${settings.gracePeriodHours} hours, your emergency contacts will be notified via $methodText and Email")
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -370,5 +432,14 @@ private fun getFrequencyText(days: Int): String {
         2 -> "Every 2 days"
         3 -> "Every 3 days"
         else -> "Every $days days"
+    }
+}
+
+private fun getMessagingMethodText(method: String): String {
+    return when (method) {
+        "sms" -> "SMS Only"
+        "whatsapp" -> "WhatsApp Only"
+        "both" -> "SMS & WhatsApp"
+        else -> "SMS & WhatsApp"
     }
 }

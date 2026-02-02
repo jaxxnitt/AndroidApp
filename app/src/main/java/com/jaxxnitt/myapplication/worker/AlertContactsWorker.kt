@@ -42,17 +42,20 @@ class AlertContactsWorker(
         var whatsAppSuccessCount = 0
         var emailSuccessCount = 0
 
+        val sendSms = settings.messagingMethod == "sms" || settings.messagingMethod == "both"
+        val sendWhatsApp = settings.messagingMethod == "whatsapp" || settings.messagingMethod == "both"
+
         for (contact in contacts) {
             val alertMessage = buildSmsMessage(settings.userName, lastCheckInText)
 
-            // Send WhatsApp if phone is available and Twilio WhatsApp is configured
-            if (contact.phone.isNotBlank() && WhatsAppHelper.isWhatsAppAvailable()) {
+            // Send WhatsApp if enabled and phone is available and Twilio WhatsApp is configured
+            if (sendWhatsApp && contact.phone.isNotBlank() && WhatsAppHelper.isWhatsAppAvailable()) {
                 val whatsAppSent = WhatsAppHelper.sendWhatsApp(contact.phone, alertMessage)
                 if (whatsAppSent) whatsAppSuccessCount++
             }
 
-            // Send SMS if phone is available (using smart method with Twilio fallback)
-            if (contact.phone.isNotBlank()) {
+            // Send SMS if enabled and phone is available (using smart method with Twilio fallback)
+            if (sendSms && contact.phone.isNotBlank()) {
                 val smsSent = SmsHelper.sendSmsSmart(applicationContext, contact.phone, alertMessage)
                 if (smsSent) smsSuccessCount++
             }

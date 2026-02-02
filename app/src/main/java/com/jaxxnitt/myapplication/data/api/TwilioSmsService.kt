@@ -3,10 +3,9 @@ package com.jaxxnitt.myapplication.data.api
 import com.jaxxnitt.myapplication.BuildConfig
 import kotlinx.serialization.Serializable
 import okhttp3.Credentials
-import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
 
@@ -82,11 +81,15 @@ object TwilioSmsService {
         return try {
             val url = "https://api.twilio.com/2010-04-01/Accounts/${TwilioConfig.ACCOUNT_SID}/Messages.json"
 
-            val formBody = "To=${formatPhoneNumber(toPhoneNumber)}&From=${TwilioConfig.FROM_PHONE_NUMBER}&Body=${message}"
+            val formBody = FormBody.Builder()
+                .add("To", formatPhoneNumber(toPhoneNumber))
+                .add("From", TwilioConfig.FROM_PHONE_NUMBER)
+                .add("Body", message)
+                .build()
 
             val request = Request.Builder()
                 .url(url)
-                .post(formBody.toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+                .post(formBody)
                 .header("Authorization", Credentials.basic(TwilioConfig.ACCOUNT_SID, TwilioConfig.AUTH_TOKEN))
                 .build()
 
@@ -154,11 +157,15 @@ object TwilioWhatsAppService {
             val formattedTo = formatWhatsAppNumber(toPhoneNumber)
             val formattedFrom = "whatsapp:${TwilioConfig.WHATSAPP_FROM_NUMBER}"
 
-            val formBody = "To=$formattedTo&From=$formattedFrom&Body=$message"
+            val formBody = FormBody.Builder()
+                .add("To", formattedTo)
+                .add("From", formattedFrom)
+                .add("Body", message)
+                .build()
 
             val request = Request.Builder()
                 .url(url)
-                .post(formBody.toRequestBody("application/x-www-form-urlencoded".toMediaType()))
+                .post(formBody)
                 .header("Authorization", Credentials.basic(TwilioConfig.ACCOUNT_SID, TwilioConfig.AUTH_TOKEN))
                 .build()
 

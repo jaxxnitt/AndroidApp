@@ -114,11 +114,18 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             return "Check in now!"
         }
 
+        val now = System.currentTimeMillis()
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = lastCheckIn.timestamp
         calendar.add(Calendar.DAY_OF_YEAR, settings.checkInFrequencyDays)
         calendar.set(Calendar.HOUR_OF_DAY, settings.checkInHour)
         calendar.set(Calendar.MINUTE, settings.checkInMinute)
+        calendar.set(Calendar.SECOND, 0)
+
+        // If next due is in the past, advance by frequency until it's in the future
+        while (calendar.timeInMillis < now) {
+            calendar.add(Calendar.DAY_OF_YEAR, settings.checkInFrequencyDays)
+        }
 
         return dateFormat.format(Date(calendar.timeInMillis))
     }
