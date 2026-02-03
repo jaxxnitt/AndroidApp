@@ -9,6 +9,7 @@ import com.jaxxnitt.myapplication.data.database.Contact
 import com.jaxxnitt.myapplication.data.model.CloudCheckIn
 import com.jaxxnitt.myapplication.data.model.CloudContact
 import com.jaxxnitt.myapplication.data.model.CloudSettings
+import com.jaxxnitt.myapplication.data.model.LifeguardRelationship
 import com.jaxxnitt.myapplication.data.model.UserData
 import com.jaxxnitt.myapplication.data.preferences.AppSettings
 import kotlinx.coroutines.channels.awaitClose
@@ -193,6 +194,135 @@ class FirestoreRepository {
                 trySend(snapshot?.toObject(CloudSettings::class.java))
             }
         awaitClose { listener?.remove() }
+    }
+
+    // Lifeguard relationship operations
+    private fun lifeguardsCollection() = firestore.collection("lifeguards")
+
+    /**
+     * Look up a user by their phone number.
+     * Returns the UserData if found, null otherwise.
+     */
+    suspend fun findUserByPhone(phoneNumber: String): UserData? {
+        return try {
+            val cleaned = phoneNumber.replace(Regex("[^0-9+]"), "")
+            // Try exact match and common formats
+            val variants = mutableListOf(cleaned)
+            if (!cleaned.startsWith("+")) {
+                variants.add("+$cleaned")
+                variants.add("+91$cleaned") // Indian format
+                variants.add("+1$cleaned")  // US format
+            }
+
+            for (variant in variants) {
+                val snapshot = firestore.collection("users")
+                    .whereEqualTo("phoneNumber", variant)
+                    .limit(1)
+                    .get()
+                    .await()
+                val user = snapshot.documents.firstOrNull()?.toObject(UserData::class.java)
+                if (user != null) return user
+            }
+            null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Create a lifeguard relationship: the emergency contact (guardian) protects the current user.
+     */
+    suspend fun createLifeguardRelationship(
+        guardianPhone: String,
+        protectedUserId: String,
+        protectedUserName: String,
+        protectedUserPhone: String
+    ): Result<Unit> {
+        return try {
+            val cleaned = guardianPhone.replace(Regex("[^0-9+]"), "")
+            // Check if relationship already exists
+            val existing = lifeguardsCollection()
+                .whereEqualTo("protectedUserId", protectedUserId)
+                .whereEqualTo("guardianPhone", cleaned)
+                .get()
+                .await()
+
+            if (existing.isEmpty) {
+                lifeguardsCollection().add(
+                    LifeguardRelationship(
+                        guardianPhone = cleaned,
+                        protectedUserId = protectedUserId,
+                        protectedUserName = protectedUserName,
+                        protectedUserPhone = protectedUserPhone
+                    )
+                ).await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Remove a lifeguard relationship when an emergency contact is deleted.
+     */
+    suspend fun removeLifeguardRelationship(
+        guardianPhone: String,
+        protectedUserId: String
+    ): Result<Unit> {
+        return try {
+            val cleaned = guardianPhone.replace(Regex("[^0-9+]"), "")
+            val snapshot = lifeguardsCollection()
+                .whereEqualTo("protectedUserId", protectedUserId)
+                .whereEqualTo("guardianPhone", cleaned)
+                .get()
+                .await()
+            snapshot.documents.forEach { doc ->
+                doc.reference.delete().await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get list of people the current user is a lifeguard for.
+     * Queries by the current user's phone number.
+     */
+    fun getLifeguardForFlow(myPhoneNumber: String): Flow<List<LifeguardRelationship>> = callbackFlow {
+        val cleaned = myPhoneNumber.replace(Regex("[^0-9+]"), "")
+        val listener = lifeguardsCollection()
+            .whereEqualTo("guardianPhone", cleaned)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val relationships = snapshot?.documents?.mapNotNull {
+                    it.toObject(LifeguardRelationship::class.java)
+                } ?: emptyList()
+                trySend(relationships)
+            }
+        awaitClose { listener?.remove() }
+    }
+
+    /**
+     * Get list of people the current user is a lifeguard for (one-shot).
+     */
+    suspend fun getLifeguardFor(myPhoneNumber: String): List<LifeguardRelationship> {
+        return try {
+            val cleaned = myPhoneNumber.replace(Regex("[^0-9+]"), "")
+            val snapshot = lifeguardsCollection()
+                .whereEqualTo("guardianPhone", cleaned)
+                .get()
+                .await()
+            snapshot.documents.mapNotNull {
+                it.toObject(LifeguardRelationship::class.java)
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     // Bulk sync for initial migration

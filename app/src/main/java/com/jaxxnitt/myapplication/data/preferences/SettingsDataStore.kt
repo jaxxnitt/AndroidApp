@@ -25,6 +25,7 @@ data class AppSettings(
     val fullName: String = "",
     val profilePictureUri: String = "",
     val isFirstTime: Boolean = true,
+    val phoneNumber: String = "",
     val messagingMethod: String = "both", // "sms", "whatsapp", or "both"
     // Auth-related fields
     val userId: String? = null,
@@ -44,6 +45,7 @@ class SettingsDataStore(private val context: Context) {
         val FULL_NAME = stringPreferencesKey("full_name")
         val PROFILE_PICTURE_URI = stringPreferencesKey("profile_picture_uri")
         val IS_FIRST_TIME = booleanPreferencesKey("is_first_time")
+        val PHONE_NUMBER = stringPreferencesKey("phone_number")
         val MESSAGING_METHOD = stringPreferencesKey("messaging_method")
         // Auth-related keys
         val USER_ID = stringPreferencesKey("user_id")
@@ -62,6 +64,7 @@ class SettingsDataStore(private val context: Context) {
             fullName = preferences[PreferencesKeys.FULL_NAME] ?: "",
             profilePictureUri = preferences[PreferencesKeys.PROFILE_PICTURE_URI] ?: "",
             isFirstTime = preferences[PreferencesKeys.IS_FIRST_TIME] ?: true,
+            phoneNumber = preferences[PreferencesKeys.PHONE_NUMBER] ?: "",
             messagingMethod = preferences[PreferencesKeys.MESSAGING_METHOD] ?: "both",
             userId = preferences[PreferencesKeys.USER_ID],
             authProvider = preferences[PreferencesKeys.AUTH_PROVIDER],
@@ -115,6 +118,7 @@ class SettingsDataStore(private val context: Context) {
             preferences[PreferencesKeys.FULL_NAME] = settings.fullName
             preferences[PreferencesKeys.PROFILE_PICTURE_URI] = settings.profilePictureUri
             preferences[PreferencesKeys.IS_FIRST_TIME] = settings.isFirstTime
+            preferences[PreferencesKeys.PHONE_NUMBER] = settings.phoneNumber
             preferences[PreferencesKeys.MESSAGING_METHOD] = settings.messagingMethod
         }
     }
@@ -128,6 +132,12 @@ class SettingsDataStore(private val context: Context) {
     suspend fun updateProfilePictureUri(uri: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.PROFILE_PICTURE_URI] = uri
+        }
+    }
+
+    suspend fun updatePhoneNumber(phone: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.PHONE_NUMBER] = phone
         }
     }
 

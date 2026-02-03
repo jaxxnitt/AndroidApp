@@ -1,6 +1,7 @@
 package com.jaxxnitt.myapplication.ui.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jaxxnitt.myapplication.AreYouDeadApplication
@@ -22,7 +23,11 @@ data class AddContactUiState(
 
 class AddContactViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val contactRepository = (application as AreYouDeadApplication).contactRepository
+    private val app = application as AreYouDeadApplication
+    private val contactRepository = app.contactRepository
+    private val firestoreRepository = app.firestoreRepository
+    private val settingsDataStore = app.settingsDataStore
+    private val authRepository = app.authRepository
 
     private val _uiState = MutableStateFlow(AddContactUiState())
     val uiState: StateFlow<AddContactUiState> = _uiState.asStateFlow()
@@ -94,6 +99,24 @@ class AddContactViewModel(application: Application) : AndroidViewModel(applicati
                     contactRepository.update(contact)
                 } else {
                     contactRepository.insert(contact)
+                }
+
+                // Create lifeguard relationship if contact has a phone number
+                if (contact.phone.isNotBlank()) {
+                    try {
+                        val currentUserId = authRepository.currentUser?.uid
+                        val settings = settingsDataStore.getSettings()
+                        if (currentUserId != null) {
+                            firestoreRepository.createLifeguardRelationship(
+                                guardianPhone = contact.phone,
+                                protectedUserId = currentUserId,
+                                protectedUserName = settings.fullName,
+                                protectedUserPhone = settings.phoneNumber
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.w("AddContactVM", "Failed to create lifeguard relationship", e)
+                    }
                 }
 
                 _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)

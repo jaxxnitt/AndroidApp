@@ -40,6 +40,17 @@ data class CloudCheckIn(
     val syncedAt: Timestamp? = null
 )
 
+data class LifeguardRelationship(
+    @DocumentId
+    val id: String = "",
+    val guardianPhone: String = "",       // Phone of the lifeguard (emergency contact)
+    val protectedUserId: String = "",     // UID of the person who added this emergency contact
+    val protectedUserName: String = "",   // Name of the person who added this emergency contact
+    val protectedUserPhone: String = "",  // Phone of the person who added this emergency contact
+    @ServerTimestamp
+    val createdAt: Timestamp? = null
+)
+
 data class CloudSettings(
     val checkInHour: Int = 9,
     val checkInMinute: Int = 0,
