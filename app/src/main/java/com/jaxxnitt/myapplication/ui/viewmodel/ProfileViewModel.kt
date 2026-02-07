@@ -51,8 +51,13 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             }.collect { state ->
                 _uiState.value = state
                 // Load lifeguard relationships once we have the phone number
-                if (state.phoneNumber.isNotBlank() && state.isLoadingLifeguard) {
-                    loadLifeguardRelationships(state.phoneNumber)
+                if (state.isLoadingLifeguard) {
+                    if (state.phoneNumber.isNotBlank()) {
+                        loadLifeguardRelationships(state.phoneNumber)
+                    } else {
+                        // No phone number set, nothing to load
+                        _uiState.value = _uiState.value.copy(isLoadingLifeguard = false)
+                    }
                 }
             }
         }
