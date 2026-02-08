@@ -19,6 +19,7 @@ lifecycleViewModelCompose = "2.7.0"
 room = "2.6.1"
 coil = "2.5.0"
 lottie = "6.3.0"
+razorpay = "1.6.40"
 # Firebase
 firebaseBom = "33.7.0"
 playServicesAuth = "21.3.0"
@@ -73,6 +74,9 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 
 # Lottie for animations
 lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie" }
+
+# Razorpay
+razorpay = { group = "com.razorpay", name = "checkout", version.ref = "razorpay" }
 
 # Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }

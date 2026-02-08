@@ -33,6 +33,9 @@ android {
         buildConfigField("String", "TWILIO_AUTH_TOKEN", "\"${localProperties.getProperty("TWILIO_AUTH_TOKEN", "")}\"")
         buildConfigField("String", "TWILIO_FROM_PHONE_NUMBER", "\"${localProperties.getProperty("TWILIO_FROM_PHONE_NUMBER", "")}\"")
         buildConfigField("String", "TWILIO_WHATSAPP_FROM_NUMBER", "\"${localProperties.getProperty("TWILIO_WHATSAPP_FROM_NUMBER", "")}\"")
+
+        // Razorpay
+        buildConfigField("String", "RAZORPAY_KEY_ID", "\"${localProperties.getProperty("RAZORPAY_KEY_ID", "")}\"")
     }
 
     buildTypes {
@@ -96,6 +99,9 @@ dependencies {
 
     // Lottie for animations
     implementation(libs.lottie.compose)
+
+    // Razorpay
+    implementation(libs.razorpay)
 
     // Firebase
     implementation(platform(libs.firebase.bom))

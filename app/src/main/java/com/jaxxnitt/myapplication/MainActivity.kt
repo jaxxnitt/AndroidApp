@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,9 +19,12 @@ import androidx.navigation.compose.rememberNavController
 import com.jaxxnitt.myapplication.ui.navigation.NavGraph
 import com.jaxxnitt.myapplication.ui.theme.MyApplicationTheme
 import com.jaxxnitt.myapplication.worker.WorkerScheduler
+import com.razorpay.Checkout
+import com.razorpay.PaymentResultListener
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), PaymentResultListener {
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -31,6 +35,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        Checkout.preload(applicationContext)
 
         requestPermissions()
         initializeWorkers()
@@ -46,6 +52,32 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    fun startRazorpayPayment(amount: Int) {
+        val checkout = Checkout()
+        checkout.setKeyID(BuildConfig.RAZORPAY_KEY_ID)
+
+        val options = JSONObject().apply {
+            put("name", "Are You Dead Yet?")
+            put("description", "Buy Me a Coffee")
+            put("currency", "INR")
+            put("amount", amount * 100) // Amount in paise
+            put("prefill", JSONObject().apply {
+                put("email", "")
+                put("contact", "")
+            })
+        }
+
+        checkout.open(this, options)
+    }
+
+    override fun onPaymentSuccess(paymentId: String?) {
+        Toast.makeText(this, "Thank you for the coffee! Payment ID: $paymentId", Toast.LENGTH_LONG).show()
+    }
+
+    override fun onPaymentError(code: Int, response: String?) {
+        Toast.makeText(this, "Payment cancelled", Toast.LENGTH_SHORT).show()
     }
 
     private fun requestPermissions() {
